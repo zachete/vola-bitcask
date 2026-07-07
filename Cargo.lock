@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "vola"
+name = "vola-bitcask"
 version = "0.1.0"
