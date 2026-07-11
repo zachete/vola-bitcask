@@ -1,6 +1,7 @@
 use std::fs::File;
-use std::io::{BufReader, BufWriter, Read, Write};
+use std::io::{BufReader, BufWriter, Read, Seek, Write};
 
+#[derive(Debug)]
 pub struct Record {
     pub key_len: usize,
     pub value_len: usize,
@@ -41,7 +42,7 @@ impl Record {
         })
     }
 
-    pub fn write_to(&mut self, buf_writer: &mut BufWriter<File>) -> std::io::Result<()> {
+    pub fn write_to(&mut self, buf_writer: &mut BufWriter<File>) -> std::io::Result<u64> {
         let key_len_bytes = self.key.len().to_le_bytes();
         let value_len_bytes = self.value.len().to_le_bytes();
         let mut record_bytes = Vec::new();
@@ -50,9 +51,10 @@ impl Record {
         record_bytes.extend_from_slice(&self.key);
         record_bytes.extend_from_slice(&self.value);
 
+        let offset = buf_writer.stream_position()?;
         buf_writer.write_all(&record_bytes)?;
         buf_writer.flush()?;
 
-        Ok(())
+        Ok(offset)
     }
 }

@@ -1,4 +1,4 @@
-# vola-bitcask
+# vola-kv
 
 A tiny Rust implementation of a [Bitcask](https://riak.com/assets/bitcask-intro.pdf)-style
 key-value store, built for learning purposes.
@@ -24,8 +24,39 @@ project is a minimal, educational implementation — not production-ready.
 
 ## Usage
 
+There are two ways to run it: as a server or in REPL mode.
+
+### Server mode
+
+Start the server:
 ```bash
-cargo run -- set foo bar
-cargo run -- get foo
-cargo run -- scan
+cargo run -p server
+```
+
+Connect and send commands using netcat:
+```bash
+➜ nc localhost 1666
+set a 1
+OK
+set b 2
+OK
+get a
+a=1
+get b
+b=2
+```
+
+### REPL mode
+
+```bash
+➜ cargo run -p repl
+
+> set a 1
+OK
+> set b 2
+OK
+> get a
+a=1
+> get b
+b=2
 ```

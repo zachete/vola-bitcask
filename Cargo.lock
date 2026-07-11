@@ -3,5 +3,19 @@
 version = 4
 
 [[package]]
-name = "vola-bitcask"
+name = "repl"
+version = "0.1.0"
+dependencies = [
+ "storage",
+]
+
+[[package]]
+name = "server"
+version = "0.1.0"
+dependencies = [
+ "storage",
+]
+
+[[package]]
+name = "storage"
 version = "0.1.0"

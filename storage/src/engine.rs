@@ -1,25 +1,24 @@
-mod storage;
+use crate::{Record, Scanner};
 
-use storage::{Record, Scanner};
-
-use std::collections::HashMap;
-use std::fs::OpenOptions;
-use std::io::{BufReader, BufWriter, Seek, SeekFrom, Write, stdout};
-use std::str;
-use std::{fs::File, io::stdin};
+use std::io::SeekFrom;
+use std::{
+    collections::HashMap,
+    fs::{File, OpenOptions},
+    io::{BufReader, BufWriter, Seek},
+};
 
 #[derive(Debug)]
 struct LogPointer {
     offset: u64,
 }
 
-struct Bitcask {
+pub struct Engine {
     index: HashMap<Vec<u8>, LogPointer>,
     buf_reader: BufReader<File>,
     buf_writer: BufWriter<File>,
 }
 
-impl Bitcask {
+impl Engine {
     pub fn new(db_path: &str) -> Self {
         let db_file = OpenOptions::new()
             .write(true)
@@ -41,7 +40,9 @@ impl Bitcask {
     }
 
     pub fn set(&mut self, key: &str, value: &str) -> std::io::Result<()> {
-        Record::new(key, value).write_to(&mut self.buf_writer)?;
+        let mut record = Record::new(key, value);
+        let offset = record.write_to(&mut self.buf_writer)?;
+        self.index.insert(record.key, LogPointer { offset });
         Ok(())
     }
 
@@ -69,46 +70,5 @@ impl Bitcask {
         println!("Index: {:?}", self.index);
 
         Ok(())
-    }
-}
-
-fn main() -> std::io::Result<()> {
-    let mut bitcask = Bitcask::new("db");
-    bitcask.scan()?;
-
-    loop {
-        let mut prompt = String::new();
-        print!("> ");
-        stdout().flush().unwrap();
-        stdin().read_line(&mut prompt).expect("can't read line");
-        let parsed_prompt: Vec<&str> = prompt.trim_end().split_whitespace().collect();
-        let command = parsed_prompt[0];
-
-        match command {
-            "set" => {
-                let key = parsed_prompt[1];
-                let value = parsed_prompt[2];
-                println!("{}, {}", key, value);
-
-                bitcask.set(key, value)?;
-            }
-            "get" => {
-                let key = parsed_prompt[1];
-                let value = bitcask.get(key);
-
-                match value {
-                    Some(val) => {
-                        println!("{:?}", str::from_utf8(&val.value).unwrap());
-                    }
-                    None => {
-                        println!("Not found")
-                    }
-                }
-            }
-            "scan" => {
-                bitcask.scan()?;
-            }
-            _ => {}
-        }
     }
 }

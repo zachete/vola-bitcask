@@ -1,6 +1,3 @@
-[package]
-name = "vola-bitcask"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
+[workspace]
+name = "vola_kv"
+members = ["repl","server", "storage"]
