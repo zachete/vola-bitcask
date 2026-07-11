@@ -1,4 +1,5 @@
-use crate::{Record, Scanner};
+use crate::input::Command;
+use crate::{Input, Record, Scanner};
 
 use std::io::SeekFrom;
 use std::{
@@ -48,7 +49,6 @@ impl Engine {
 
     pub fn get(&mut self, key: &str) -> Option<Record> {
         let log_pointer = self.index.get(key.as_bytes());
-
         if let Some(val) = log_pointer {
             self.buf_reader
                 .seek(SeekFrom::Start(val.offset))
@@ -56,7 +56,6 @@ impl Engine {
 
             let maybe_record =
                 Record::read_from(&mut self.buf_reader).map_or(None, |val| Some(val));
-
             return maybe_record;
         }
 
@@ -70,5 +69,42 @@ impl Engine {
         println!("Index: {:?}", self.index);
 
         Ok(())
+    }
+
+    pub fn try_run(&mut self, input: Input) -> String {
+        match input.command {
+            Command::GET => {
+                if let Some(arg) = input.args[0].clone() {
+                    let maybe_record = self.get(&arg);
+                    if let Some(record) = maybe_record {
+                        return String::from_utf8(record.value).unwrap_or("".to_string());
+                    }
+                }
+            }
+            Command::SET => {
+                let key = match input.args[0].clone() {
+                    Some(val) => val,
+                    None => {
+                        return String::from("Invalid key arg");
+                    }
+                };
+                let value = match input.args[1].clone() {
+                    Some(val) => val,
+                    None => {
+                        return String::from("Invalid value arg");
+                    }
+                };
+
+                match self.set(&key, &value) {
+                    Ok(_) => {
+                        return String::from("OK");
+                    }
+                    Err(_) => return String::from("Can't set the key"),
+                }
+            }
+            Command::NONE => {}
+        };
+
+        "".to_string()
     }
 }
